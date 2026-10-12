@@ -1,0 +1,14 @@
+{
+  "name": "techshelf",
+  "version": "1.0.0",
+  "description": "TechShelf - IT asset management web app (IT 340 makeup project)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Peter",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
