@@ -41,7 +41,7 @@ sudo ufw enable
 sudo ufw status
 ```
 
-Keep it running after logout (optional):
+Keep it running after logout :
 
 ```bash
 sudo npm install -g pm2
@@ -76,4 +76,6 @@ Plus the general deliverables: VLAN, username/password auth, email verification 
 
 ## AI usage
 
-HTML, CSS and the Express server were generated with Claude (Anthropic) from my proposal mockups, then reviewed and deployed by me.
+HTML, CSS and the Express server were generated with Claude from my proposal mockups, then reviewed and deployed by me.
+To research what Ubuntu and UFW commands to use for VM and firewall setup respectively.
+Troubleshooting, Testing and Planning.
