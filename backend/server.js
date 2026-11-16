@@ -112,6 +112,10 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 4000;
 const HOST = process.env.HOST || "10.0.0.20";
-app.listen(PORT, HOST, () => {
-  console.log(`TechShelf API running on http://${HOST}:${PORT}`);
+app.listen(PORT, HOST, (err) => {
+ if (err) {
+    console.error(`Could not listen on ${HOST}:${PORT}: ${err.code}`);
+    process.exit(1);
+ }
+ console.log(`TechShelf API running on http://${HOST}:${PORT}`);
 });
