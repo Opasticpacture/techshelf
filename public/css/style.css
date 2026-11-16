@@ -261,3 +261,8 @@ a:hover { text-decoration: underline; }
 
 .hero-band { background: linear-gradient(135deg, #eef3fb 0%, #f8fafc 100%); }
 .hero { background: none; }
+
+/* Form result messages */
+.form-message { min-height: 1.2em; margin: 0 0 14px; font-size: 0.88rem; }
+.form-message.ok { color: var(--green); }
+.form-message.error { color: #b91c1c; }
