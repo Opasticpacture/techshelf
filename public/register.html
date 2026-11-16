@@ -18,7 +18,7 @@
       </div>
 
       <!-- Milestone 2: action will POST to the back-end registration API -->
-      <form action="#" method="post">
+      <form data-api="login" action="#" method="post">
         <div class="form-grid">
           <div>
             <div class="field">
@@ -70,6 +70,7 @@
           </div>
         </div>
 
+	<p id="form-message" class="form-message" role="alert"></p>
         <button type="submit" class="btn-primary">Create Account</button>
       </form>
 
@@ -83,5 +84,6 @@
     <span>&copy; 2026 TechShelf. All rights reserved.</span>
   </footer>
 
+<script src="js/auth.js"></script>
 </body>
 </html>
