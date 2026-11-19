@@ -47,6 +47,38 @@ async function verifyPassword(password, stored) {
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,50}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// ---------- Sessions ----------
+// After login the server creates a random session ID, saves it in the sessions table,
+// and gives it to the browser in a cookie. Each later request sends the cookie back,
+// and the server looks the ID up to know who is logged in.
+const SESSION_HOURS = 8;
+
+function getSessionId(req) {
+  const cookies = req.headers.cookie || "";
+  const match = cookies.match(/(?:^|;\s*)sid=([a-f0-9]{64})/);
+  return match ? match[1] : null;
+}
+
+// Middleware: only lets the request through if the session cookie is valid
+async function requireLogin(req, res, next) {
+  const sid = getSessionId(req);
+  if (!sid) return res.status(401).json({ error: "Please log in." });
+  try {
+    const [rows] = await pool.execute(
+      `SELECT u.id, u.username, u.full_name, u.role
+         FROM sessions s JOIN users u ON u.id = s.user_id
+        WHERE s.id = ? AND s.expires_at > NOW()`,
+      [sid]
+    );
+    if (!rows[0]) return res.status(401).json({ error: "Session expired. Please log in again." });
+    req.user = rows[0]; // the logged-in user, available to every route after this
+    next();
+  } catch (err) {
+    console.error(err.code, err.message);
+    res.status(500).json({ error: "Server error." });
+  }
+}
+
 app.post("/api/register", async (req, res) => {
   const { fullname, email, username, password } = req.body || {};
 
@@ -92,7 +124,32 @@ app.post("/api/login", async (req, res) => {
     if (!user || !(await verifyPassword(password, user.password_hash)))
       return res.status(401).json({ error: "Invalid username/email or password." });
 
+    const sid = crypto.randomBytes(32).toString("hex"); // 64 random hex characters
+    await pool.execute(
+      `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, NOW() + INTERVAL ${SESSION_HOURS} HOUR)`,
+      [sid, user.id]
+    );
+    // HttpOnly: page scripts can't read the cookie. SameSite=Strict: other sites can't send it.
+    res.setHeader("Set-Cookie", `sid=${sid}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_HOURS * 3600}`);
     res.json({ message: "Login successful.", user: { id: user.id, username: user.username, role: user.role } });
+  } catch (err) {
+    console.error(err.code, err.message);
+    res.status(500).json({ error: "Server error." });
+  }
+});
+
+// Who is logged in?
+app.get("/api/me", requireLogin, (req, res) => {
+  res.json({ user: req.user });
+});
+
+// Log out: delete the session so the cookie stops working
+app.post("/api/logout", async (req, res) => {
+  const sid = getSessionId(req);
+  try {
+    if (sid) await pool.execute("DELETE FROM sessions WHERE id = ?", [sid]);
+    res.setHeader("Set-Cookie", "sid=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0");
+    res.json({ message: "Logged out." });
   } catch (err) {
     console.error(err.code, err.message);
     res.status(500).json({ error: "Server error." });
@@ -113,9 +170,11 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 4000;
 const HOST = process.env.HOST || "10.0.0.20";
 app.listen(PORT, HOST, (err) => {
- if (err) {
+  // Express 5 passes startup errors here. If the address isn't ready yet (e.g. during boot),
+  // exit with an error code so systemd restarts the service a few seconds later.
+  if (err) {
     console.error(`Could not listen on ${HOST}:${PORT}: ${err.code}`);
     process.exit(1);
- }
- console.log(`TechShelf API running on http://${HOST}:${PORT}`);
+  }
+  console.log(`TechShelf API running on http://${HOST}:${PORT}`);
 });
