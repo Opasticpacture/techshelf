@@ -16,3 +16,10 @@ CREATE TABLE IF NOT EXISTS users (
   role ENUM('user','admin') NOT NULL DEFAULT 'user',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id CHAR(64) PRIMARY KEY,
+  user_id INT NOT NULL,
+  expires_at DATETIME NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
