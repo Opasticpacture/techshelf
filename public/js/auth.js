@@ -1,21 +1,42 @@
-// TechShelf: sends the Login and Register forms to the API and shows the result on the page.
+// TechShelf: login, register, logout, and the "who is logged in?" check on protected pages.
 (function () {
-  // Home page: show the logged-in username in the navbar (display only, not real security)
+  // ----- Protected pages (home page) -----
+  // Ask the server who is logged in. No valid session -> go to the login page.
   const welcome = document.getElementById("welcome-user");
   if (welcome) {
-    const name = sessionStorage.getItem("techshelfUser");
-    if (name) welcome.textContent = "Welcome, " + name;
+    fetch("/api/me")
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.replace("login.html");
+          return null;
+        }
+        return res.json();
+      })
+      .then((body) => {
+        if (body && body.user) welcome.textContent = `Welcome, ${body.user.username} (${body.user.role})`;
+      })
+      .catch(() => {
+        welcome.textContent = "Can't reach the server";
+      });
   }
 
+  // ----- Log out button -----
+  const logout = document.getElementById("logout-link");
+  if (logout) {
+    logout.addEventListener("click", async (event) => {
+      event.preventDefault();
+      await fetch("/api/logout", { method: "POST" }).catch(() => {});
+      window.location.replace("login.html");
+    });
+  }
+
+  // ----- Login and Register forms -----
   const form = document.querySelector("form[data-api]");
   if (!form) return;
 
   const action = form.dataset.api; // "login" or "register"
   const message = document.getElementById("form-message");
   const button = form.querySelector('button[type="submit"]');
-
-  // Opening the login page counts as logging out
-  if (action === "login") sessionStorage.removeItem("techshelfUser");
 
   function show(text, ok) {
     message.textContent = text;
@@ -53,7 +74,7 @@
         form.reset();
         setTimeout(() => (window.location.href = "login.html"), 1500);
       } else {
-        sessionStorage.setItem("techshelfUser", body.user.username);
+        // The session cookie was set by the server; the browser stores it automatically.
         show("Login successful. Redirecting...", true);
         setTimeout(() => (window.location.href = "index.html"), 1000);
       }
