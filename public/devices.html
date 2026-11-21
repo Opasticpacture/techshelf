@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechShelf | Devices</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Tech<span class="shelf">Shelf</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="devices.html" class="active">Devices</a></li>
+      <li><a href="#">Profile</a></li>
+    </ul>
+    <div class="nav-user">
+      <span id="welcome-user">Welcome</span>
+      <a href="login.html" class="btn-outline" id="logout-link">Log Out</a>
+    </div>
+  </nav>
+
+  <main class="devices-wrap">
+    <h1>Devices</h1>
+
+    <form id="search-form" class="search-row">
+      <div class="search-bar">
+        <input type="search" id="search-input" placeholder="Search by name or serial number..." aria-label="Search devices" maxlength="50">
+        <button type="submit">Search</button>
+      </div>
+      <select id="type-select" aria-label="Device type">
+        <option value="">All types</option>
+        <option value="laptop">Laptops</option>
+        <option value="phone">Phones</option>
+        <option value="tablet">Tablets</option>
+        <option value="monitor">Monitors</option>
+        <option value="accessory">Accessories</option>
+      </select>
+    </form>
+
+    <p id="search-status" class="search-status"></p>
+
+    <div class="table-wrap">
+      <table class="device-table">
+        <thead>
+          <tr><th>Name</th><th>Type</th><th>Serial number</th><th>Status</th></tr>
+        </thead>
+        <tbody id="device-rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span>&copy; 2026 TechShelf. All rights reserved.</span>
+  </footer>
+
+  <script src="js/auth.js"></script>
+  <script src="js/devices.js"></script>
+</body>
+</html>
