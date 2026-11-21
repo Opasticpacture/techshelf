@@ -155,7 +155,35 @@ app.post("/api/logout", async (req, res) => {
     res.status(500).json({ error: "Server error." });
   }
 });
+// ---------- Devices ----------
+const DEVICE_TYPES = ["laptop", "phone", "tablet", "monitor", "accessory"];
 
+// Search devices by name or serial number, optionally filtered by type. Logged-in users only.
+app.get("/api/devices", requireLogin, async (req, res) => {
+  const search = typeof req.query.search === "string" ? req.query.search.trim().slice(0, 50) : "";
+  const type = typeof req.query.type === "string" ? req.query.type : "";
+  if (type && !DEVICE_TYPES.includes(type)) return res.status(400).json({ error: "Unknown device type." });
+
+  try {
+    // Parameterized query again: the search text is data, never part of the SQL
+    const [rows] = await pool.execute(
+      `SELECT id, name, type, serial_number,
+              CASE WHEN is_locked THEN 'Locked'
+                   WHEN assigned_to IS NULL THEN 'Available'
+                   ELSE 'Checked out' END AS status,
+              (assigned_to = ?) AS mine
+         FROM devices
+        WHERE (name LIKE ? OR serial_number LIKE ?)
+          AND (? = '' OR type = ?)
+        ORDER BY name, serial_number`,
+      [req.user.id, `%${search}%`, `%${search}%`, type, type]
+    );
+    res.json({ devices: rows.map((d) => ({ ...d, mine: d.mine === 1 })) });
+  } catch (err) {
+    console.error(err.code, err.message);
+    res.status(500).json({ error: "Server error." });
+  }
+});
 app.use((req, res) => res.status(404).json({ error: "Not found." }));
 
 // Error handler: return a short JSON error instead of a stack trace,
